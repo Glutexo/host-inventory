@@ -48,3 +48,7 @@ def serve_tornado():
 
     TornadoRunThread().start()
     return app, loop
+
+
+if __name__ == "__main__":
+    app, loop = serve_tornado()
