@@ -55,10 +55,12 @@ class TornadoClient(object):
 
 def run():
     stub = Client()
+    hosts = []
     for name in util.names():
         display_name = "-".join(name)
         facts = {"demo": {"hostname": f"{display_name}"}}
-        stub.create_or_update(Host(display_name=display_name, facts=facts))
+        hosts.append(Host({}, display_name=display_name, facts=facts))
+    stub.create_or_update(hosts)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,9 @@
 import os
 
+from hbi.client import run
 from hbi.server import Host, Filter, Service
 from hbi.util import names
+from mock.mock import call, Mock, patch
 from pytest import fixture
 
 MODE = os.environ.get("MODE", "").lower()
@@ -275,3 +277,34 @@ def test_get_tag(service):
     service.create_or_update([h])
     r = service.get([Filter(tags=tags)])
     assert len(r) == 1
+
+
+@patch("hbi.client.Host")
+@patch("hbi.client.util.names", return_value=[["first", "host"], ["second", "host"]])
+@patch("hbi.client.Client")
+def test_client_creates_all_hosts(client, names, host):
+    run()
+
+    calls = []
+    canonical_facts = {}
+    for name in names.return_value:
+        display_name = "-".join(name)
+        facts = {"demo": {"hostname": display_name}}
+        calls.append(call(canonical_facts, display_name=display_name, facts=facts))
+
+    host.assert_has_calls(calls)
+    assert len(host.mock_calls) == len(names.return_value)
+
+
+@patch("hbi.client.Host")
+@patch("hbi.client.util.names", return_value=[["first"], ["second"]])
+@patch("hbi.client.Client")
+def test_client_creates_or_updates_all_hosts(client, names, host):
+    hosts = []
+    for _ in names.return_value:
+        hosts.append(Mock())
+    host.side_effect = hosts
+
+    run()
+
+    client.return_value.create_or_update.assert_called_once_with(hosts)
