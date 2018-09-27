@@ -3,7 +3,9 @@
 This is a gRPC prototype for the Insights Platform.  Currently using a simple
 Python dict to store inventory; there is no permanent storage.
 
-### Getting Started
+## Getting Started
+
+### Setting up an environment
 
 This project uses pipenv to manage the development and deployment environments.
 To set the project up for development do the following:
@@ -26,6 +28,8 @@ sh build.sh
 ```
 
 This needs to be done after any changes to `proto/hbi.proto`.
+
+## Running
 
 ### Running tests
 
