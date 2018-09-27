@@ -38,11 +38,25 @@ you run `build.sh` first so the gRPC stubs are generated.
 
 ### Running server
 
+To run the gRPC server, you can use the `serve.py` scriptlet. This uses
+`watchdog` to cycle the server after any code modifications.
+
 ```
 python serve.py
 ```
 
-This uses `watchdog` to cycle the server after any code modifications.
+If you want to bypass `watchdog` and run the server itself directly, invoke
+it as a module.
+
+```
+python -m hbi.server.grpc_server
+```
+
+To run a Tornado REST server, run the `serve_rest.py` scriptlet.
+
+```
+python serve_rest.py
+``` 
 
 ### Running client
 
