@@ -43,10 +43,8 @@ class Index(object):
             if h:
                 return h
 
-    def apply_filter(self, f, hosts=None):
-        if hosts is None:
-            hosts = self.all_hosts
-        elif len(hosts) == 0:
+    def apply_filter(self, f, hosts):
+        if not hosts:
             raise StopIteration
 
         # TODO: Actually USE the fact & tag namespaces
@@ -106,15 +104,16 @@ class Service(object):
         return ret
 
     def get(self, filters=None):
-        if not filters:
-            return list(self.index.all_hosts)
-        elif type(filters) != list or any(type(f) != Filter for f in filters):
+        if filters is None:
+            filters = []
+
+        if type(filters) != list or any(type(f) != Filter for f in filters):
             raise ValueError("Query must be a list of Filter objects")
-        else:
-            filtered_set = None
-            for f in filters:
-                filtered_set = set(self.index.apply_filter(f, filtered_set))
-                # If we have no results, we'll never get more so exit now.
-                if len(filtered_set) == 0:
-                    return []
-            return list(filtered_set)
+
+        filtered_set = self.index.all_hosts
+        for f in filters:
+            filtered_set = set(self.index.apply_filter(f, filtered_set))
+            # If we have no results, we'll never get more so exit now.
+            if not filtered_set:
+                break
+        return list(filtered_set)

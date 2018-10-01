@@ -1,8 +1,8 @@
 import os
 
-from hbi.server import Host, Filter, Service
+from hbi.server import Host, Filter, Index, Service
 from hbi.util import names
-from pytest import fixture
+from pytest import fixture, mark, raises
 
 MODE = os.environ.get("MODE", "").lower()
 
@@ -34,6 +34,11 @@ def service():
         yield TornadoClient()
     else:
         yield Service()
+
+
+@fixture
+def index():
+    return Index()
 
 
 @fixture
@@ -89,6 +94,19 @@ def test_create_and_get(service, host_list):
 def test_get_one(service, host_list):
     filters = Filter(ids=[service.create_or_update(host_list)[0].id])
     assert len(service.get([filters])) == 1
+
+
+@mark.parametrize(("filters",), [((),),
+                                 ([Filter(), object()],)])
+def test_get_invalid(service, filters):
+    with raises(ValueError):
+        service.get(filters)
+
+
+def test_apply_filter_without_host_list(index):
+    f = Filter(ids=[])
+    with raises(TypeError):
+        index.apply_filter(f)
 
 
 @fixture
