@@ -18,9 +18,6 @@ class Index(object):
         self.account_dict = defaultdict(set)
 
     def add(self, host):
-        if not isinstance(host, Host):
-            msg = f"Index only stores Host objects, was given type {type(host)}"
-            raise ValueError(msg)
         self.all_hosts.add(host)
         self.dict_[host.id] = host
         self.account_dict[host.account_number].add(host)
@@ -108,8 +105,6 @@ class Service(object):
     def get(self, filters=None):
         if not filters:
             return list(self.index.all_hosts)
-        elif type(filters) != list or any(type(f) != Filter for f in filters):
-            raise ValueError("Query must be a list of Filter objects")
         else:
             filtered_set = None
             for f in filters:
