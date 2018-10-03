@@ -107,7 +107,7 @@ class Service(object):
 
     def get(self, filters=None):
         if not filters:
-            return list(self.index.all_hosts)
+            return self.index.all_hosts
         elif type(filters) != list or any(type(f) != Filter for f in filters):
             raise ValueError("Query must be a list of Filter objects")
         else:
@@ -116,5 +116,5 @@ class Service(object):
                 filtered_set = set(self.index.apply_filter(f, filtered_set))
                 # If we have no results, we'll never get more so exit now.
                 if len(filtered_set) == 0:
-                    return []
-            return list(filtered_set)
+                    return set()
+            return filtered_set
