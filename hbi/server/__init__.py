@@ -47,7 +47,7 @@ class Index(object):
         if hosts is None:
             hosts = self.all_hosts
         elif len(hosts) == 0:
-            raise StopIteration
+            return
 
         # TODO: Actually USE the fact & tag namespaces
         iterables = filter(None, (

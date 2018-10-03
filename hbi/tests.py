@@ -1,6 +1,6 @@
 import os
 
-from hbi.server import Host, Filter, Service
+from hbi.server import Host, Index, Filter, Service
 from hbi.util import names
 from pytest import fixture
 
@@ -34,6 +34,11 @@ def service():
         yield TornadoClient()
     else:
         yield Service()
+
+
+@fixture
+def index():
+    return Index()
 
 
 @fixture
@@ -275,3 +280,9 @@ def test_get_tag(service):
     service.create_or_update([h])
     r = service.get([Filter(tags=tags)])
     assert len(r) == 1
+
+
+def test_index_apply_filter_to_no_hosts(index):
+    hosts = set()
+    hosts = index.apply_filter(Filter(), hosts)
+    assert not set(hosts)
