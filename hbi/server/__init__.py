@@ -2,6 +2,11 @@ import uuid
 
 from collections import defaultdict
 from itertools import chain
+from os import getenv
+from sqlalchemy import create_engine, Column, String
+from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from hbi.model import Host, Filter
 
@@ -10,12 +15,64 @@ def flat_fact_chain(f):
     return chain.from_iterable(v.items() for v in f.values())
 
 
+def host_to_orm(host):
+    return OrmHost(
+        id=host.id,
+        canonical_facts=host.canonical_facts,
+        account_number=host.account_number,
+        display_name=host.display_name,
+        facts=host.facts,
+        tags=host.tags
+    )
+
+
+def host_from_orm(orm_host):
+    return Host(
+        orm_host.canonical_facts,
+        orm_host.id.hex,
+        account_number=orm_host.account_number,
+        display_name=orm_host.display_name,
+        facts=orm_host.facts,
+        tags=orm_host.tags
+    )
+
+
+Base = declarative_base()
+Session = sessionmaker()
+
+
+class OrmHost(Base):
+    __tablename__ = "hosts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    canonical_facts = Column(JSON())
+    account_number = Column(String())
+    display_name = Column(String())
+    facts = Column(JSON())
+    tags = Column(JSON())
+
+    def __repr__(self):
+        return f"<Host(id='{self.id}')>"
+
+
 class Index(object):
 
     def __init__(self):
+        self.engine = create_engine(getenv("DATABASE_URL"), echo=True)
+        self.session = Session(bind=self.engine)
+
         self.dict_ = {}
         self.all_hosts = set()
         self.account_dict = defaultdict(set)
+
+    def init_db(self):
+        Base.metadata.create_all(self.engine)
+
+    def cancel(self):
+        self.session.rollback()
+
+    def save(self):
+        self.session.commit()
 
     def add(self, host):
         if not isinstance(host, Host):
@@ -34,14 +91,20 @@ class Index(object):
                 self.dict_[t] = set()
             self.dict_[t].add(host)
 
+        self.session.add(host_to_orm(host))
+
     def get(self, host):
         if host.id:
-            return self.dict_.get(host.id)
+            return self.session.query(OrmHost(id=host.id)).one()
+            # return self.dict_.get(host.id)
 
         for t in host.canonical_facts.items():
             h = self.dict_.get(t)
             if h:
                 return h
+
+    def get_all(self):
+        return map(host_from_orm, self.session.query(OrmHost).all())
 
     def apply_filter(self, f, hosts=None):
         if hosts is None:
@@ -102,12 +165,12 @@ class Service(object):
                 self.index.add(h)
 
             ret.append(existing_host)
-
+        self.index.save()
         return ret
 
     def get(self, filters=None):
         if not filters:
-            return list(self.index.all_hosts)
+            return list(self.index.get_all())
         elif type(filters) != list or any(type(f) != Filter for f in filters):
             raise ValueError("Query must be a list of Filter objects")
         else:

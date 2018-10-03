@@ -53,13 +53,23 @@ class TornadoClient(object):
         return [Host.from_json(h) for h in response.json()]
 
 
-def run():
-    stub = Client()
+def create_or_update():
+    stub = TornadoClient()
+    hosts = []
     for name in util.names():
         display_name = "-".join(name)
         facts = {"demo": {"hostname": f"{display_name}"}}
-        stub.create_or_update(Host(display_name=display_name, facts=facts))
+        hosts.append(Host({}, display_name=display_name, facts=facts))
+    stub.create_or_update(hosts)
+
+
+def get():
+    stub = TornadoClient()
+    hosts = stub.get()
+    for h in hosts:
+        print(h)
 
 
 if __name__ == "__main__":
-    run()
+    # create_or_update()
+    get()
