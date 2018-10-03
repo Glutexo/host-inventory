@@ -49,18 +49,18 @@ class Index(object):
         elif len(hosts) == 0:
             raise StopIteration
 
-        # TODO: Actually USE the fact & tag namespaces
-        iterables = filter(None, (
-            f.ids, f.canonical_facts.items(),
-            flat_fact_chain(f.facts),
-            flat_fact_chain(f.tags)
-        ))
-
         if f.account_numbers:
             for acct in f.account_numbers:
                 yield from self.account_dict[acct]
 
-        for i in chain(*iterables):
+        # TODO: Actually USE the fact & tag namespaces
+        queries = chain(
+            f.ids,
+            f.canonical_facts.items(),
+            flat_fact_chain(f.facts),
+            flat_fact_chain(f.tags)
+        )
+        for i in queries:
             v = self.dict_.get(i)
             if type(v) == set:
                 yield from (i for i in v if i in hosts)

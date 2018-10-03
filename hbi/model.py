@@ -25,11 +25,11 @@ class Filter(object):
 
     def __init__(self, canonical_facts=None, ids=None, account_numbers=None,
                  tags=None, facts=None):
-        self.ids = ids
+        self.ids = ids or set()
         self.canonical_facts = canonical_facts or {}
         self.tags = tags or defaultdict(dict)
         self.facts = facts or defaultdict(dict)
-        self.account_numbers = account_numbers
+        self.account_numbers = account_numbers or set()
 
     @classmethod
     def from_pb(cls, filter_):
